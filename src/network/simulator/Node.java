@@ -3,7 +3,7 @@ package network.simulator;
 public class Node extends Host {
     
     String gateway;
-    // Port port;
+    StringBuffer buffer;
     
     public Node (String name, String MAC, String IP, int MTU, String gateway)
     {
@@ -14,30 +14,33 @@ public class Node extends Host {
         this.gateway = gateway;
     }
     
-    // public Port getPort() { return port; }
-    
-    // public void setPort(Port port) { this.port = port; }
-    
-    public Message [] writeMessage (Message [] messageList) {
+    public Message [] writeMessage (Message message, boolean moreFragments) {
         
-//        if (recipient.equals(IP)) // Se eu sou o destinatário, quer dizer que a mensagem chegou até mim e agora tenho que responder
-//        {
-//            // Message reply = new ICMP (recipient, sender, Operation.REPLY);
-//            // return reply;
-//        }
-//        
-//        
-//        if (hasMACOf(gateway) != null)
-//        { 
-//            // message = new ICMP(); 
-//        }
-//        
-//        else
-//        {
-//            Message request = new ARP (sender, gateway, Operation.REQUEST);
-//            return new Message [] { request };
-//        }
-//        
+        if (message.recipient.equals(IP)) // If the recipient is me
+        {
+            if (moreFragments) 
+            { 
+                buffer.append(message.data);
+                return null;
+            }
+            else 
+            {
+                buffer.append(message.data);
+                // Writes ICMP
+            }
+        }
+        
+        
+        if (hasMACOf(gateway) != null)
+        { 
+            // message = new ICMP(); 
+        }
+        else
+        {
+            // Message request = new ARP (sender, gateway, Operation.REQUEST);
+            //return new Message [] { request };
+        }
+        
         return null;
     }
     

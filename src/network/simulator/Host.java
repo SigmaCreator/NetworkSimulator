@@ -19,7 +19,7 @@ public class Host {
     
     public void updateTable (String IP, String MAC) { arpTable.put(IP,MAC); }
     
-    public Message [] writeMessage (Message [] message) 
+    public Message [] writeMessage (Message message) 
     {
         return null;
     }

@@ -76,7 +76,7 @@ public class NetworkSimulator {
 //        routerList.add(R2);      
     }
     
-    public Message [] execute (Host currentHop, Message [] messageList, String lastHopIP, String lastHopMAC)
+    public void execute (Host currentHop, Message message, String lastHopIP, String lastHopMAC, boolean moreFragments)
     {
         Host nextHop;
         Message [] newMessage;
@@ -87,22 +87,23 @@ public class NetworkSimulator {
             Port port = (Port) currentHop;
             Router router = port.owner;
             
-            Gateway nextGateway = router.verifyRouterTable(messageList[0].recipient); // Check ROUTERTABLE for GATEWAY of exit
+            Gateway nextGateway = router.verifyRouterTable(message.recipient); // Check ROUTERTABLE for GATEWAY of exit
             
             currentHop = nextGateway.port; // The PORT of exit is now the currentHop
             
             nextHopIP = nextGateway.IP; // nextHopIP is where the GATEWAY leads to
             
-            newMessage = currentHop.writeMessage(messageList); // PORT writes the message
+            newMessage = ((Port) currentHop).writeMessage(message,moreFragments); // PORT writes the message
+            
         }
         else
         {
             nextHopIP = ((Node) currentHop).gateway;
             
-            newMessage = currentHop.writeMessage(messageList); // HOST writes the message
+            newMessage = currentHop.writeMessage(message); // HOST writes the message
         }       
         
-        if (newMessage == null) return null; // The message was an ARP REQUEST, the HOST didn't have info
+        if (newMessage == null) return; // The message was an ARP REQUEST, the HOST didn't have info
         
         Message m = newMessage[0]; // Get a fragment to check protocol
 
@@ -113,26 +114,32 @@ public class NetworkSimulator {
                     
             Host gateway = getAway.get(gatewayIP); // Send through the cable
             
-            Message [] reply = execute (gateway, newMessage, currentHop.IP, currentHop.MAC); // REPLY comes back from the cable
+            // reply =
+            execute (gateway, newMessage[0], currentHop.IP, currentHop.MAC, false); // REPLY comes back from the cable
             
-            gatewayMAC = reply[0].data; // Get MAC
+            //gatewayMAC = reply.data; // Get MAC
                                    
-            if (!gatewayMAC.equals("")) currentHop.updateTable(gatewayIP,gatewayMAC); // Update ARP TABLE
+            //if (!gatewayMAC.equals("")) currentHop.updateTable(gatewayIP,gatewayMAC); // Update ARP TABLE
             
-            return execute(currentHop, messageList, "", ""); // Reexecute, because now the HOST knows where to send the message
+            execute(currentHop, message, "", "",false); // Reexecute, because now the HOST knows where to send the message
+            
+            return;
         }
         else if (m instanceof ARP && m.operation == Operation.REPLY) // If it's an ARP REPLY
         {
             currentHop.updateTable(lastHopIP,lastHopMAC); // Updtae ARP TABLE with the info from the lastHop, just in case it's necessary later
             nextHopIP = lastHopIP;
         }
-            
+        
         String nextHopMAC = currentHop.hasMACOf(nextHopIP); // Get MAC of the nextHop
         nextHop = MACcess.get(nextHopMAC);
-            
-        if (currentHop instanceof Port)
-            return execute (nextHop, newMessage, lastHopIP, lastHopMAC);
-        else
-            return execute(nextHop, messageList, currentHop.IP, currentHop.MAC); 
+        
+        for (int i = 0; i < newMessage.length; i++)
+        {
+            if (i == newMessage.length - 1)
+                execute (nextHop, newMessage[i], currentHop.IP, currentHop.MAC, false);
+            else
+                execute (nextHop, newMessage[i], currentHop.IP, currentHop.MAC, false);
+        }
     }
 }

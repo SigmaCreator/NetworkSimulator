@@ -13,15 +13,16 @@ public class Port extends Host
     } 
     
     
-    public Message [] writeMessage(Message [] messageList)
+    public Message [] writeMessage(Message message, boolean moreFragments)
     {
-        boolean send = true;
-         
-        for (Message message : messageList)
-            if (message.data.length() > (MTU - 20))
-                send = false;
-
-        if (send) return messageList;
-        else return null;
+//        boolean send = true;
+//         
+//        for (Message message : messageList)
+//            if (message.data.length() > (MTU - 20))
+//                send = false;
+//
+//        if (send) return messageList;
+//       else 
+        return null;
     }
 }

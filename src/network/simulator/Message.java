@@ -8,7 +8,7 @@ public class Message {
     Operation operation;
     
     public boolean isBroadcast() { return broadcast; }
-    
+        
     public String getSender() { return sender; }
     
     public String getRecipient() { return recipient; }
