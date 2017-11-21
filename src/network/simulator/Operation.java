@@ -1,5 +1,5 @@
 package network.simulator;
 
 public enum Operation {
-    REQUEST, REPLY;
+    REQUEST, REPLY, NEW;
 }

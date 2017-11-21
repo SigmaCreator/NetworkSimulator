@@ -1,9 +1,11 @@
 package network.simulator;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 public class Node extends Host {
     
     String gateway;
-    StringBuffer buffer;
     
     public Node (String name, String MAC, String IP, int MTU, String gateway)
     {
@@ -12,13 +14,14 @@ public class Node extends Host {
         this.IP = IP;
         this.MTU = MTU;
         this.gateway = gateway;
+        arpTable = new HashMap<>();
     }
     
     public Message [] writeMessage (Message message, boolean moreFragments) {
         
-        if (message.recipient.equals(IP)) // If the recipient is me
+        if (message instanceof ICMP && message.recipient.equals(IP)) // If the recipient is me
         {
-            if (moreFragments) 
+            if (moreFragments) // If there are more fragments on the way
             { 
                 buffer.append(message.data);
                 return null;
@@ -26,46 +29,62 @@ public class Node extends Host {
             else 
             {
                 buffer.append(message.data);
-                // Writes ICMP
+                    
+                if (message.operation == Operation.REQUEST) // If it was an ICMP REQUEST
+                {
+                    return shatter(IP, message.sender, buffer.toString(), Operation.REPLY);
+                } 
+                else if (message.operation == Operation.REPLY) 
+                { 
+                    return null;
+                }            
             }
         }
-        
-        
-        if (hasMACOf(gateway) != null)
-        { 
-            // message = new ICMP(); 
+        else if (message instanceof ARP && message.operation == Operation.REQUEST && message.data.equals(IP))
+        {
+            updateTable(message.sender,((ARP) message).senderMAC);
+            Message reply = new ARP (IP, message.sender, MAC, Operation.REPLY);
+            reply.data = MAC;
+            return new Message [] { reply };
         }
+        else if (message instanceof ARP && message.operation == Operation.REPLY)
+        {
+            updateTable(message.sender,message.data);
+            return null;
+        }
+        
+        if (hasMACOf(gateway) != null) return shatter(message.sender, message.recipient, message.data, Operation.REQUEST);
         else
         {
-            // Message request = new ARP (sender, gateway, Operation.REQUEST);
-            //return new Message [] { request };
+            Message request = new ARP (IP, IP, MAC, Operation.REQUEST);
+            request.data = gateway;
+            return new Message [] { request };
         }
-        
-        return null;
     }
     
-    public Message receiveMessage(Message message)
+    private Message [] shatter (String sender, String recipient, String data, Operation op)
     {
-//        if (message.isBroadcast())
-//        {
-//            if(message instanceof ARP)
-//            {
-//                if(message.getRecipient().equals(IP)) { return replyMessage(Protocol.ARP, message.getSender().IP); }
-//            }    
-//        }
-//        return null;
-        return null;
-    }
-    
-    public Message replyMessage(Protocol protocol, String dest)
-    {
-//        Message reply;
-//        if (protocol == Protocol.ARP) { reply = new ARP(this, dest, Operation.REPLY); }
-//        
-//        /* Mudar pra ICMP */
-//        else reply = new ARP(this, dest, Operation.REPLY);
-//        return reply;
-        return null;
+        String content = data;
+            ArrayList<String> pieces = new ArrayList<>();
+            String piece = "";
+            
+            for (int i = 0; i < content.length(); i += MTU) 
+            {
+                piece = content.substring(i, Math.min(i + MTU, content.length()));
+                pieces.add(piece);
+            }
+            
+            ArrayList<Message> fragments = new ArrayList<>();
+            Message frag = null;
+            
+            for (String p : pieces)
+            {
+                frag = new ICMP (sender, recipient, op);
+                frag.data = p;
+                fragments.add(frag);
+            }
+            
+            return (Message []) fragments.toArray();
     }
 
     String getGatewayIP() { return gateway; }
