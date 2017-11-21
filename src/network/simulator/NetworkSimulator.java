@@ -1,5 +1,8 @@
 package network.simulator;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,139 +13,141 @@ import java.util.HashMap;
  */
 public class NetworkSimulator {
     
-    // HashMap<String,Host> getAway; // IP , Host
-    HashMap<String,Host> MACcess; // MAC , Host
-    HashMap<String,ArrayList<Host>> subNetworks; // subNet ID , subNet Hosts
+    ArrayList<Router> routers;
+    HashMap<String,Node> getAway; // IP , NODE
+    HashMap<String,Host> MACcess; // MAC , HOST
+    HashMap<String,ArrayList<Host>> subNetworks; // subNet ID , subNet HOSTS
     
-    public void boot() 
+    public void boot(String filename) 
     {
-        Node N1 = new Node("N1", "00:00:00:00:00:01", "210.0.1.1", 20, "210.0.1.2", "210.0.1");
-        Node N2 = new Node("N2", "00:00:00:00:00:02", "210.0.2.1", 10, "210.0.2.2", "210.0.2");
-        Node N3 = new Node("N3", "00:00:00:00:00:03", "210.0.3.1", 15, "210.0.3.2", "210.0.3");
-        Node N4 = new Node("N4", "00:00:00:00:00:04", "210.0.4.1", 5,  "210.0.4.2", "210.0.4");
-        
-        Port R1_0 = new Port("R1.0", "00:00:00:00:01:01", "210.0.1.2", 20, "210.0.1");   
-        Port R1_1 = new Port("R1.1", "00:00:00:00:01:02", "210.0.2.2", 10, "210.0.2");
-        Port R1_2 = new Port("R1.2", "00:00:00:00:01:03", "210.0.10.1", 15, "210.0.10");
-        
-        ArrayList<Port> R1Ports = new ArrayList<>(Arrays.asList(new Port[]{R1_0, R1_1, R1_2}));
-        Router R1 = new Router("R1", R1Ports);
-        
-        R1_0.setRouter(R1);
-        R1_1.setRouter(R1);
-        R1_2.setRouter(R1);
-        
-        Port R2_0 = new Port("R2.0", "00:00:00:00:02:01", "210.0.3.2", 15, "210.0.3");
-        Port R2_1 = new Port("R2.1", "00:00:00:00:02:02", "210.0.4.2", 5, "210.0.4");
-        Port R2_2 = new Port("R2.2", "00:00:00:00:02:03", "210.0.10.2", 15, "210.0.10");
-        
-        ArrayList<Port> R2Ports = new ArrayList<>(Arrays.asList(new Port[]{R2_0, R2_1, R2_2}));
-        Router R2 = new Router("R2", R2Ports);    
-        
-        R2_0.setRouter(R2);
-        R2_1.setRouter(R2);
-        R2_2.setRouter(R2);
-        
-        Gateway R1_G1 = new Gateway("0.0.0.0", R1_0);
-        R1.addTableEntry("210.0.1.0", R1_G1);
-        
-        Gateway R1_G2 = new Gateway("0.0.0.0", R1_1);
-        R1.addTableEntry("210.0.2.0", R1_G2);
-        
-        Gateway R1_G3 = new Gateway("210.0.10.2", R1_2);
-        R1.addTableEntry("210.0.3.0", R1_G3);
-        
-        R1.addTableEntry("210.0.4.0", R1_G3);
-        
-        Gateway R1_G4 = new Gateway("0.0.0.0", R1_2);
-        R1.addTableEntry("210.0.10.0", R1_G4);
-        
-        Gateway R2_G1 = new Gateway("0.0.0.0", R2_0);
-        R2.addTableEntry("210.0.3.0", R2_G1);
-        
-        Gateway R2_G2 = new Gateway("0.0.0.0", R2_1);
-        R2.addTableEntry("210.0.4.0", R2_G2);
-        
-        Gateway R2_G3 = new Gateway("210.0.10.1", R2_2);
-        R2.addTableEntry("210.0.1.0", R2_G3);
-        
-        R2.addTableEntry("210.0.2.0", R2_G3);
-        
-        Gateway R2_G4 = new Gateway("0.0.0.0", R2_2);
-        R2.addTableEntry("210.0.10.0", R2_G4);
-        
-//        getAway = new HashMap<>();
-//        
-//        getAway.put(N1.IP,N1);
-//        getAway.put(N2.IP,N2);
-//        getAway.put(N3.IP,N3);
-//        getAway.put(N4.IP,N4);
-//        getAway.put(R1_0.IP,R1_0);
-//        getAway.put(R1_1.IP,R1_1);
-//        getAway.put(R1_2.IP,R1_2);
-//        getAway.put(R2_0.IP,R2_0);
-//        getAway.put(R2_1.IP,R2_1);
-//        getAway.put(R2_2.IP,R2_2);
-        
+        routers = new ArrayList<>();
+        getAway = new HashMap<>();
         MACcess = new HashMap<>();
-        
-        MACcess.put(N1.MAC,N1);
-        MACcess.put(N2.MAC,N2);
-        MACcess.put(N3.MAC,N3);
-        MACcess.put(N4.MAC,N4);
-        MACcess.put(R1_0.MAC,R1_0);
-        MACcess.put(R1_1.MAC,R1_1);
-        MACcess.put(R1_2.MAC,R1_2);
-        MACcess.put(R2_0.MAC,R2_0);
-        MACcess.put(R2_1.MAC,R2_1);
-        MACcess.put(R2_2.MAC,R2_2);
-        
-        
-        ArrayList<Host> hosts0 = new ArrayList<>();
-        hosts0.add(N1);
-        hosts0.add(R1_0);
-        
-        ArrayList<Host> hosts1 = new ArrayList<>();
-        hosts1.add(N2);
-        hosts1.add(R1_1);
-        
-        ArrayList<Host> hosts2 = new ArrayList<>();
-        hosts2.add(N3);
-        hosts2.add(R2_0);
-        
-        ArrayList<Host> hosts3 = new ArrayList<>();
-        hosts3.add(N4);
-        hosts3.add(R2_1);
-        
-        ArrayList<Host> hosts4 = new ArrayList<>();
-        hosts4.add(R1_2);
-        hosts4.add(R2_2);
-        
-        
         subNetworks = new HashMap<>();
+                
+        BufferedReader br = null;
         
-        subNetworks.put("210.0.1.0",hosts0);
-        subNetworks.put("210.0.2.0",hosts1);
-        subNetworks.put("210.0.3.0",hosts2);
-        subNetworks.put("210.0.4.0",hosts3);
-        subNetworks.put("210.0.10.0",hosts4);
-        
-        Message first = new ICMP(N1.IP, N3.IP, Operation.NEW);
+        try 
+        {
+            br = new BufferedReader(new FileReader(filename));
+            String line;
+            String [] info;
+            
+            String name, MAC, IP, gateway, subNet;
+            int MTU, numPorts;
+            
+            int state = 0; // 1 - NODE , 2 - #ROUTER, 3 - #ROUTERTABLE
+            
+            while ((line = br.readLine()) != null) 
+            {
+                System.out.println(line);
+                        
+		if (line.equals("#NODE")) { state = 1; continue; }
+                if (line.equals("#ROUTER")) { state = 2; continue; }
+                if (line.equals("#ROUTERTABLE")) { state = 3; continue; }
+                
+                switch (state)
+                {
+                    case 1 :
+                        
+                        info = line.split(",");
+                        
+                        name = info[0];
+                        MAC = info[1];
+                        IP = info[2];
+                        MTU = Integer.parseInt(info[3]);
+                        gateway = info[4];
+                        
+                        Node N = new Node(name, MAC, IP, MTU, gateway);
+                        
+                        getAway.put(N.IP,N);
+                        MACcess.put(N.MAC,N);
+                        addToSubNetworks(N);
+                        
+                        break;
+                        
+                    case 2 :
+                        
+                        info = line.split(",");
+                        
+                        Router router = new Router(info[0], new ArrayList<>());
+                        Port port = null;
+                        int portCounter = 0;
+                        
+                        numPorts = Integer.parseInt(info[1]);
+                        
+                        for (int i = 2; i < info.length; i += 3)
+                        {
+                            name = router.name + "." + portCounter;
+                            
+                            MAC = info[i];
+                            IP = info[i+1];
+                            MTU = Integer.parseInt(info[i+2]);
+                            
+                            port = new Port(name, MAC, IP, MTU);
+                            port.owner = router;
+                            
+                            router.addPort(port);
+                            
+                            MACcess.put(port.MAC,port);
+                            addToSubNetworks(port);
+                            
+                            portCounter = portCounter + 1;
+                        }
+                        
+                        routers.add(router);
+                        
+                        break;
+                        
+                    case 3 :
+                        
+                        info = line.split(",");
+                        
+                        Router currentRouter = null;
+                        Port currentPort = null;
+                        Gateway g = null;
+                        
+                        for (Router r : routers)
+                        {
+                            if (r.name.equals(info[0])) currentRouter = r;
+                        }
+                        
+                        for (Port p : currentRouter.ports)
+                        {
+                            if (p.name.equals(currentRouter.name + "." + info[3]))
+                                currentPort = p;
+                        }
+                        
+                        g = new Gateway(info[2],currentPort);
+                        currentRouter.addTableEntry(info[1], g);
+                     
+                    default : break;
+                }
+            }
+
+        } 
+        catch (IOException e) { e.printStackTrace(); } 
+
+        Node sender = getAway.get("210.0.1.1");
+        Node recipient = getAway.get("210.0.4.1");
+                
+        Message first = new ICMP(sender.IP, recipient.IP, Operation.NEW);
         
         first.data = "abcdefghijklmnopqrstuvwxyz";
         
-        execute(N1, first , "", "",false);
+        first.moreFragments = false;
+        
+        execute(sender, first , "", "");
     }
     
-    public void execute (Host currentHop, Message message, String lastHopIP, String lastHopMAC, boolean moreFragments)
+    public void execute (Host currentHop, Message message, String lastHopIP, String lastHopMAC)
     {
         System.out.println("==================");
         Host nextHop;
         ArrayList<Message> newMessage;
         String nextHopIP = "";
         
-        System.out.println("currentHop is " + currentHop);
-        System.out.println(currentHop.name + " - " + currentHop.IP);
+        System.out.println("Message arrived at " + currentHop.name + " - " + currentHop.IP);
         
         if (currentHop instanceof Port) // If it's a PORT
         {
@@ -160,7 +165,7 @@ public class NetworkSimulator {
             if (nextGateway.IP.equals("0.0.0.0")) nextHopIP = message.recipient; // nextHop has direct connection to this port
             else nextHopIP = nextGateway.IP; // nextHopIP is where the GATEWAY leads to
             
-            System.out.println("nextHopIP is " + nextHopIP);
+            System.out.println("Next hop is " + nextHopIP);
             
             newMessage = ((Port) currentHop).writeMessage(message, nextHopIP); // PORT writes the message
             
@@ -168,43 +173,39 @@ public class NetworkSimulator {
         else
         {
             nextHopIP = ((Node) currentHop).gateway;
-            System.out.println("nextHopIP is " + nextHopIP);
-            newMessage = ((Node) currentHop).writeMessage(message,moreFragments); // HOST writes the message
+            System.out.println("Next hop is " + nextHopIP);
+            newMessage = ((Node) currentHop).writeMessage(message); // HOST writes the message
         }       
         
         if (newMessage == null) 
         {
-            System.out.println("ICMP fragment received");
+            System.out.println(currentHop.name + " received a REPLY");
             return;
-        } // The message was a non-terminal fragment of ICMP
+        }
         
         if (newMessage.get(0) instanceof ARP)
-            System.out.println("ARP " + newMessage.get(0).operation);
+            System.out.println(currentHop.name + " wrote an ARP " + newMessage.get(0).operation);
         else
-             System.out.println("ICMP " + newMessage.get(0).operation);
+            System.out.println(currentHop.name + " wrote an ICMP " + newMessage.get(0).operation);
         
         System.out.println("Sender: " + newMessage.get(0).sender + " | Recipient: " + newMessage.get(0).recipient + " | Data: " + newMessage.get(0).data);
 
-        
         Message m = newMessage.get(0); // Get a fragment to check protocol
 
         if (m instanceof ARP && m.operation == Operation.REQUEST) // If it's an ARP REQUEST
-        {   
-            String subNet = getSubNet(m.sender);
-            
-            ArrayList<Host> neighbors = subNetworks.get(subNet);
+        {  
+            ArrayList<Host> neighbors = subNetworks.get(currentHop.subNet);
+
+            System.out.println("Current subNet : " + currentHop.subNet);
             
             for (Host h : neighbors)
             {
                 if (!h.IP.equals(m.sender)) {
-                    execute (h, newMessage.get(0), currentHop.IP, currentHop.MAC, false); // REPLY comes back from the cable
+                    execute (h, newMessage.get(0), currentHop.IP, currentHop.MAC); // REPLY comes back from the cable
                 }
             }
-            //gatewayMAC = reply.data; // Get MAC
-                                   
-            //if (!gatewayMAC.equals("")) currentHop.updateTable(gatewayIP,gatewayMAC); // Update ARP TABLE
             
-            execute(currentHop, message, "", "", false); // Reexecute, because now the HOST knows where to send the message
+            execute(currentHop, message, "", ""); // Reexecute, because now the HOST knows where to send the message
             
             return;
         }
@@ -219,29 +220,21 @@ public class NetworkSimulator {
         
         for (int i = 0; i < newMessage.size(); i++)
         {
-            if (i == newMessage.size() - 1)
-                execute (nextHop, newMessage.get(i), currentHop.IP, currentHop.MAC, false);
-            else
-                execute (nextHop, newMessage.get(i), currentHop.IP, currentHop.MAC, true);
+           execute (nextHop, newMessage.get(i), currentHop.IP, currentHop.MAC);
+         
         }
     }
     
-    public String getSubNet(String IP)
+    public void addToSubNetworks (Host host) 
     {
-        int dotCounter = 0;
-            int size = 0;
-                        
-            for (int i = 0; i < IP.length(); i++)
-            {
-                if (IP.charAt(i) == '.') dotCounter = dotCounter + 1;
-                if (dotCounter == 3)
-                {
-                    size = i;
-                    break;
-                }
-            }
-            
-        return IP.substring(0, size) + ".0";
-                
+       if (subNetworks.containsKey(host.subNet))
+           subNetworks.get(host.subNet).add(host);
+       else
+       {
+           ArrayList<Host> hosts = new ArrayList<>();
+           hosts.add(host);
+           subNetworks.put(host.subNet,hosts);
+       }
     }
+    
 }

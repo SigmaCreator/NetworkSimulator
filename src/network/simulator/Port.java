@@ -6,16 +6,17 @@ import java.util.HashMap;
 public class Port extends Host
 {
     Router owner;
-    Port(String name, String MAC, String IP, int MTU, String mask) 
+    Port(String name, String MAC, String IP, int MTU) 
     {
         this.name = name;
         this.MAC = MAC;
         this.IP = IP;
         this.MTU = MTU;
         this.arpTable = new HashMap<>();
-        this.subNet = mask + ".0";
-        this.broadcast = mask + ".255";
         buffer = new StringBuffer();
+        
+        setSubNet();
+        System.out.println(subNet);
     } 
     
     public void setRouter (Router owner) { this.owner = owner;}
@@ -36,27 +37,29 @@ public class Port extends Host
             updateTable(message.sender,message.data);
             return null;
         }
+        else // message instanceof ICMP
+        {
+            String gateway = owner.verifyRouterTable(IP).IP;
         
-        String gateway = owner.verifyRouterTable(IP).IP;
-        
-        if (gateway.equals("0.0.0.0")) gateway = nextHopIP;
+            if (gateway.equals("0.0.0.0")) gateway = nextHopIP;
         
             System.out.println("Next gateway : " + gateway);
         
-        if (hasMACOf(gateway) != null) return shatter(message.sender, message.recipient, message.data, message.operation);
-        else
-        {
-            Message request = new ARP (IP, broadcast, Operation.REQUEST);
-            request.data = gateway;
+            if (hasMACOf(gateway) != null) return shatter(message.sender, message.recipient, message.data, message.operation, message.moreFragments);
+            else
+            {
+                Message request = new ARP (IP, broadcast, Operation.REQUEST);
+                request.data = gateway;
             
-            ArrayList<Message> list = new ArrayList<>();
-            list.add(request);
-            return list;
+                ArrayList<Message> list = new ArrayList<>();
+                list.add(request);
+                return list;
+            }
         }
         
     }
     
-    private ArrayList<Message> shatter (String sender, String recipient, String data, Operation op)
+    private ArrayList<Message> shatter (String sender, String recipient, String data, Operation op, boolean moreFragments)
     {
         String content = data;
             ArrayList<String> pieces = new ArrayList<>();
@@ -76,9 +79,12 @@ public class Port extends Host
             {
                 frag = new ICMP (sender, recipient, op);
                 frag.data = p;
+                frag.moreFragments = true;
                     System.out.println("New ICMP fragment - Sender : " + frag.sender + " | Recipient : " + frag.recipient + " | Data : " + frag.data);
                 fragments.add(frag);
             }
+            
+            fragments.get(fragments.size()-1).moreFragments = moreFragments;
             
             return fragments;
     }

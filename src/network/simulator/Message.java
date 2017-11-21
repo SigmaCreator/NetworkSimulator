@@ -6,5 +6,6 @@ public class Message {
     String sender;
     String recipient;
     Operation operation;
+    boolean moreFragments;
     
 }

@@ -15,7 +15,7 @@ public class Runner {
     {
         NetworkSimulator net = new NetworkSimulator();
         
-        net.boot();
+        net.boot("test.txt");
     }
     
 }
