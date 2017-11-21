@@ -38,7 +38,7 @@ public class Router {
         }
         
         subNet = IP.substring(0, size) + ".0";
-                      
+                              
         return routerTable.get(subNet);
     }
 }

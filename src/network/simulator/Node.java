@@ -7,7 +7,7 @@ public class Node extends Host {
     
     String gateway;
     
-    public Node (String name, String MAC, String IP, int MTU, String gateway)
+    public Node (String name, String MAC, String IP, int MTU, String gateway, String mask)
     {
         this.name = name;
         this.MAC = MAC;
@@ -15,9 +15,12 @@ public class Node extends Host {
         this.MTU = MTU;
         this.gateway = gateway;
         arpTable = new HashMap<>();
+        this.subNet = mask + ".0";
+        this.broadcast = mask + ".255";
+        buffer = new StringBuffer();
     }
     
-    public Message [] writeMessage (Message message, boolean moreFragments) {
+    public ArrayList<Message> writeMessage (Message message, boolean moreFragments) {
         
         if (message instanceof ICMP && message.recipient.equals(IP)) // If the recipient is me
         {
@@ -42,10 +45,12 @@ public class Node extends Host {
         }
         else if (message instanceof ARP && message.operation == Operation.REQUEST && message.data.equals(IP))
         {
-            updateTable(message.sender,((ARP) message).senderMAC);
-            Message reply = new ARP (IP, message.sender, MAC, Operation.REPLY);
+            Message reply = new ARP (IP, message.sender, Operation.REPLY);
             reply.data = MAC;
-            return new Message [] { reply };
+            
+            ArrayList<Message> list = new ArrayList<>();
+            list.add(reply);
+            return list;
         }
         else if (message instanceof ARP && message.operation == Operation.REPLY)
         {
@@ -56,13 +61,16 @@ public class Node extends Host {
         if (hasMACOf(gateway) != null) return shatter(message.sender, message.recipient, message.data, Operation.REQUEST);
         else
         {
-            Message request = new ARP (IP, IP, MAC, Operation.REQUEST);
+            Message request = new ARP (IP, broadcast, Operation.REQUEST);
             request.data = gateway;
-            return new Message [] { request };
+            
+            ArrayList<Message> list = new ArrayList<>();
+            list.add(request);
+            return list;
         }
     }
     
-    private Message [] shatter (String sender, String recipient, String data, Operation op)
+    private ArrayList<Message> shatter (String sender, String recipient, String data, Operation op)
     {
         String content = data;
             ArrayList<String> pieces = new ArrayList<>();
@@ -71,6 +79,7 @@ public class Node extends Host {
             for (int i = 0; i < content.length(); i += MTU) 
             {
                 piece = content.substring(i, Math.min(i + MTU, content.length()));
+                    System.out.println("Offset " + i + " : " + piece);
                 pieces.add(piece);
             }
             
@@ -81,10 +90,11 @@ public class Node extends Host {
             {
                 frag = new ICMP (sender, recipient, op);
                 frag.data = p;
+                    System.out.println("New ICMP fragment - Sender : " + frag.sender + " | Recipient : " + frag.recipient + " | Data : " + frag.data);
                 fragments.add(frag);
             }
-            
-            return (Message []) fragments.toArray();
+                        
+            return fragments;
     }
 
     String getGatewayIP() { return gateway; }

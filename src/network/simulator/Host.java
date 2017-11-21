@@ -9,6 +9,8 @@ public class Host {
     int MTU;
     HashMap<String,String> arpTable;
     StringBuffer buffer;
+    String subNet;
+    String broadcast;
     
     public String hasMACOf (String IP) 
     {
