@@ -23,7 +23,7 @@ public class Runner {
         
         try 
         {
-            br = new BufferedReader(new FileReader("executions.txt"));
+            br = new BufferedReader(new FileReader(args[0]));
             
             String line, topology, sender, recipient, message;
             
