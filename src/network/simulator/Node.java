@@ -38,7 +38,7 @@ public class Node extends Host {
                 
                 if (message.operation == Operation.REQUEST) // If it was an ICMP REQUEST, then I should REPLY
                 {
-                    return shatter(IP, message.sender, buffer.toString(), Operation.REPLY, message.moreFragments);
+                    return shatter(IP, message.sender, buffer.toString(), Operation.REPLY, message.moreFragments, 8);
                 } 
                 else if (message.operation == Operation.REPLY) // If it was an ICMP REPLY, then I'm just gonna sit back and relax
                 { 
@@ -63,7 +63,7 @@ public class Node extends Host {
         }
         
         if (hasMACOf(gateway) != null) // If I have the MAC of the gateway
-            return shatter(message.sender, message.recipient, message.data, Operation.REQUEST, message.moreFragments); // Send it to them
+            return shatter(message.sender, message.recipient, message.data, Operation.REQUEST, message.moreFragments, message.ttl); // Send it to them
         else
         {
             Message request = new ARP (IP, broadcast, Operation.REQUEST);
@@ -75,7 +75,7 @@ public class Node extends Host {
         }
     }
     
-    private ArrayList<Message> shatter (String sender, String recipient, String data, Operation op, boolean moreFragments)
+    private ArrayList<Message> shatter (String sender, String recipient, String data, Operation op, boolean moreFragments, int ttl)
     {
         String content = data;
             ArrayList<String> pieces = new ArrayList<>();
@@ -96,6 +96,7 @@ public class Node extends Host {
                 frag = new ICMP (sender, recipient, op);
                 frag.data = p;
                 frag.moreFragments = true;
+                frag.ttl = ttl;
                     System.out.println("New ICMP fragment - Sender : " + frag.sender + " | Recipient : " + frag.recipient + " | Data : " + frag.data);
                 fragments.add(frag);
             }

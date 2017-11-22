@@ -45,7 +45,7 @@ public class Port extends Host
         
             System.out.println("Next gateway : " + gateway);
         
-            if (hasMACOf(gateway) != null) return shatter(message.sender, message.recipient, message.data, message.operation, message.moreFragments);
+            if (hasMACOf(gateway) != null) return shatter(message.sender, message.recipient, message.data, message.operation, message.moreFragments, message.ttl - 1);
             else
             {
                 Message request = new ARP (IP, broadcast, Operation.REQUEST);
@@ -59,7 +59,7 @@ public class Port extends Host
         
     }
     
-    private ArrayList<Message> shatter (String sender, String recipient, String data, Operation op, boolean moreFragments)
+    private ArrayList<Message> shatter (String sender, String recipient, String data, Operation op, boolean moreFragments, int ttl)
     {
         String content = data;
             ArrayList<String> pieces = new ArrayList<>();
@@ -80,6 +80,7 @@ public class Port extends Host
                 frag = new ICMP (sender, recipient, op);
                 frag.data = p;
                 frag.moreFragments = true;
+                frag.ttl = ttl;
                     System.out.println("New ICMP fragment - Sender : " + frag.sender + " | Recipient : " + frag.recipient + " | Data : " + frag.data);
                 fragments.add(frag);
             }

@@ -7,5 +7,6 @@ public class Message {
     String recipient;
     Operation operation;
     boolean moreFragments;
+    int ttl;
     
 }
