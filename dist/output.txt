@@ -1,0 +1,42 @@
+
+========================================================================================================================
+Topologia: topologia3.txt - Origem: n1 - Destino: n2 - Mesagem: abcdefghijklmnopqrstuvwxyz
+========================================================================================================================
+N1 box N1 :  ARP - Who has 210.0.1.2? Tell 210.0.1.1
+R1 => N1 :  ARP - 210.0.1.2 is at 00:00:00:00:01:01
+N1 => R1 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 8 , data = abcdefghij)
+R1 box R1 :  ARP - Who has 210.0.12.2? Tell 210.0.12.1
+R2 => R1 :  ARP - 210.0.12.2 is at 00:00:00:00:02:01
+R1 => R2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 7 , data = abcdefghij)
+R2 box R2 :  ARP - Who has 210.0.2.1? Tell 210.0.2.2
+N2 => R2 :  ARP - 210.0.2.1 is at 00:00:00:00:00:02
+R2 => N2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 6 , data = abcde)
+R2 => N2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 6 , data = fghij)
+N1 => R1 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 8 , data = klmnopqrst)
+R1 => R2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 7 , data = klmnopqrst)
+R2 => N2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 6 , data = klmno)
+R2 => N2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 6 , data = pqrst)
+N1 => R1 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 8 , data = uvwxyz)
+R1 => R2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 7 , data = uvwxyz)
+R2 => N2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 6 , data = uvwxy)
+R2 => N2 :  ICMP - Echo (ping) REQUEST (src = 210.0.1.1 , dst = 210.0.2.1 , ttl = 6 , data = z)
+N2 rbox N2 : Received abcdefghijklmnopqrstuvwxyz
+N2 => R2 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 8 , data = abcde)
+R2 => R1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 7 , data = abcde)
+R1 => N1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 6 , data = abcde)
+N2 => R2 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 8 , data = fghij)
+R2 => R1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 7 , data = fghij)
+R1 => N1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 6 , data = fghij)
+N2 => R2 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 8 , data = klmno)
+R2 => R1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 7 , data = klmno)
+R1 => N1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 6 , data = klmno)
+N2 => R2 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 8 , data = pqrst)
+R2 => R1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 7 , data = pqrst)
+R1 => N1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 6 , data = pqrst)
+N2 => R2 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 8 , data = uvwxy)
+R2 => R1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 7 , data = uvwxy)
+R1 => N1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 6 , data = uvwxy)
+N2 => R2 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 8 , data = z)
+R2 => R1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 7 , data = z)
+R1 => N1 :  ICMP - Echo (ping) REPLY (src = 210.0.2.1 , dst = 210.0.1.1 , ttl = 6 , data = z)
+N1 rbox N1 : Received abcdefghijklmnopqrstuvwxyz
