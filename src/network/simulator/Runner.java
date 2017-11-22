@@ -23,7 +23,7 @@ public class Runner {
         
         try 
         {
-            br = new BufferedReader(new FileReader(args[0]));
+            br = new BufferedReader(new FileReader("commands.txt"));
             
             String line, topology, sender, recipient, message;
             

@@ -6,3 +6,5 @@ topologia2.txt n1 n4 abcdefghijklmnopqrstuv
 topologia2.txt n4 n1 abcdefghijkl
 topologia2.txt n2 n3 abcdefghijkl
 topologia2.txt n3 n2 abcdefghij
+topologia3.txt n1 n3 accordingtoallknownlawsofaviation
+topologia3.txt n3 n2 nowwereflyinghigh

@@ -7,8 +7,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -125,6 +123,8 @@ public class NetworkSimulator {
                                 currentPort = p;
                         }
                         
+                        System.out.println(currentRouter.name + "\n" + currentPort + " - " + info[3]);
+                        
                         g = new Gateway(info[2],currentPort);
                         currentRouter.addTableEntry(info[1], g);
                      
@@ -190,7 +190,7 @@ public class NetworkSimulator {
             Router router = port.owner;
             
             Gateway nextGateway = router.verifyRouterTable(message.recipient); // Check ROUTERTABLE for GATEWAY of exit
-            
+
             currentHop = nextGateway.port; // The PORT of exit is now the currentHop
             
             System.out.println("Router redirected to " + currentHop.name);
@@ -297,6 +297,7 @@ public class NetworkSimulator {
             
             for (Host h : neighbors)
             {
+                
                 if (!h.IP.equals(m.sender)) {
                     execute (h, newMessage.get(0), currentHop.IP, currentHop.MAC); // REPLY comes back from the cable
                 }
