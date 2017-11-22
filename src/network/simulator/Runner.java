@@ -5,6 +5,10 @@
  */
 package network.simulator;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
 /**
  *
  * @author user
@@ -15,7 +19,27 @@ public class Runner {
     {
         NetworkSimulator net = new NetworkSimulator();
         
-        net.boot("test.txt");
+        BufferedReader br = null;
+        
+        try 
+        {
+            br = new BufferedReader(new FileReader("executions.txt"));
+            
+            String line, topology, sender, recipient, message;
+            
+            while ((line = br.readLine()) != null)
+            {
+                String [] info = line.split(" ");
+                topology = info[0];
+                sender = info[1];
+                recipient = info[2];
+                message = info[3];
+                
+                net.boot(topology, sender, recipient, message);
+                
+            }
+        
+        } catch (IOException e) { e.printStackTrace(); } 
     }
     
 }

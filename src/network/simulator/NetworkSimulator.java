@@ -1,10 +1,14 @@
 package network.simulator;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -14,14 +18,16 @@ public class NetworkSimulator {
 
     Log log;
     ArrayList<Router> routers;
+    ArrayList<Node> nodes;
     HashMap<String,Host> getAway; // IP , HOST
     HashMap<String,Host> MACcess; // MAC , HOST
     HashMap<String,ArrayList<Host>> subNetworks; // subNet ID , subNet HOSTS
     
-    public void boot(String filename) 
+    public void boot(String filename, String senderName, String recipientName, String messageText) 
     {
         log = Log.getInstance();
         routers = new ArrayList<>();
+        nodes = new ArrayList<>();
         getAway = new HashMap<>();
         MACcess = new HashMap<>();
         subNetworks = new HashMap<>();
@@ -61,6 +67,7 @@ public class NetworkSimulator {
                         
                         Node N = new Node(name, MAC, IP, MTU, gateway);
                         
+                        nodes.add(N);
                         getAway.put(N.IP,N);
                         MACcess.put(N.MAC,N);
                         addToSubNetworks(N);
@@ -127,23 +134,45 @@ public class NetworkSimulator {
 
         } 
         catch (IOException e) { e.printStackTrace(); } 
-
-        Node sender = (Node) getAway.get("210.0.1.1");
-        Node recipient = (Node) getAway.get("210.0.4.1");
+        
+        
+        Node sender = null;
+        Node recipient = null;
+        
+        for (Node n : nodes)
+        {
+            if ( n.name.equalsIgnoreCase(senderName) )
+                sender = n;
+            if ( n.name.equalsIgnoreCase(recipientName) )
+                recipient = n;
+        }
+                
+        
                 
         Message first = new ICMP(sender.IP, recipient.IP, Operation.NEW);
         
-        first.data = "abcdefghijklmnopqrstuvwxyz";
+        first.data = messageText;
         
         first.moreFragments = false;
         
         first.ttl = 8;
         
+        log.writeLog("\n");
+        log.writeLog("========================================================================================================================\n");
+        log.writeLog("Topologia: " + filename + " - Origem: " + senderName + " - Destino: " + recipientName + " - Mesagem: " + messageText + "\n");
+        log.writeLog("========================================================================================================================\n");
+        
         execute(sender, first , "", "");
-        
-        System.out.println("==================");
-        
+
         System.out.println(Log.getInstance().getLog());
+        
+        BufferedWriter writer;
+        
+        try {
+            writer = new BufferedWriter(new FileWriter("output.txt"));
+            writer.write(Log.getInstance().getLog());
+            writer.close();
+        } catch (IOException e) {}
     }
     
     public void execute (Host currentHop, Message message, String lastHopIP, String lastHopMAC)
@@ -179,8 +208,71 @@ public class NetworkSimulator {
             nextHopIP = ((Node) currentHop).gateway;
             System.out.println("Next hop is " + nextHopIP);
             newMessage = ((Node) currentHop).writeMessage(message); // HOST writes the message
-        }       
+        }
         
+                /////////////////////////
+                // LOGGING STUFF BEGIN //
+                /////////////////////////
+                
+        if (message.operation != Operation.NEW)
+        {
+            Host lastIntermediateHop = getAway.get(lastHopIP);
+            
+            if (message instanceof ARP && message.operation == Operation.REQUEST) // OK
+            {
+                if (lastIntermediateHop instanceof Node)
+                    log.writeLog(lastIntermediateHop.name + " box " + lastIntermediateHop.name + " :  ARP - Who has " + message.data + "? Tell " + lastHopIP + "\n");     
+                else if (lastIntermediateHop instanceof Port)
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " box " + ((Port) lastIntermediateHop).owner.name + " :  ARP - Who has " + message.data + "? Tell " + lastHopIP + "\n");
+            }
+            else if (message instanceof ARP && message.operation == Operation.REPLY)
+            {
+                
+                if (lastIntermediateHop instanceof Node)
+                {
+                    if (getAway.get(message.recipient) instanceof Node) 
+                        log.writeLog(lastIntermediateHop.name + " => "  + getAway.get(message.recipient).name + " :  ARP - " + lastHopIP + " is at " +  message.data + "\n");
+                    else if (getAway.get(message.recipient) instanceof Port)
+                        log.writeLog(lastIntermediateHop.name + " => "  + ((Port) getAway.get(message.recipient)).owner.name + " :  ARP - " + lastHopIP + " is at " +  message.data + "\n");
+                }
+                else if (getAway.get(message.recipient) instanceof Node)
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + getAway.get(message.recipient).name + " :  ARP - " + lastHopIP + " is at " +  message.data + "\n");
+                else if (getAway.get(message.recipient) instanceof Port)
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + ((Port) getAway.get(message.recipient)).owner.name + " :  ARP - " + lastHopIP + " is at " +  message.data + "\n");
+            }
+            else if (message instanceof ICMP)
+            {             
+                if (lastIntermediateHop instanceof Node)
+                {
+                    if (currentHop instanceof Node)
+                    {
+                        log.writeLog(lastIntermediateHop.name + " => "  + currentHop.name + " :  ICMP - Echo (ping) " + message.operation + " (src = " + message.sender + " , dst = " + message.recipient + " , ttl = " + message.ttl +  " , data = " + message.data + ")\n");
+                    }
+                    else if (currentHop instanceof Port)
+                    {   
+                        log.writeLog(lastIntermediateHop.name + " => "  + ((Port) currentHop).owner.name + " :  ICMP - Echo (ping) " + message.operation + " (src = " + message.sender + " , dst = " + message.recipient + " , ttl = " + message.ttl + " , data = " + message.data + ")\n");
+                    }
+                }
+                else if (currentHop instanceof Node)
+                {
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + currentHop.name +" :  ICMP - Echo (ping) " + message.operation + " (src = " + message.sender + " , dst = " + message.recipient + " , ttl = " + message.ttl + " , data = " + message.data + ")\n");
+                }
+                else if (currentHop instanceof Port && !currentHop.IP.equals(lastHopIP))
+                {
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + ((Port) currentHop).owner.name + " :  ICMP - Echo (ping) " + message.operation + " (src = " + message.sender + " , dst = " + message.recipient + " , ttl = " + message.ttl + " , data = " + message.data + ")\n");
+                }
+                
+                if (((ICMP) message).moreFragments == false && currentHop instanceof Node)
+                {
+                    log.writeLog(currentHop.name + " rbox " + currentHop.name + " : Received " + currentHop.buffer.toString() + "\n");
+                }
+            }
+        }
+        
+                ///////////////////////
+                // LOGGING STUFF END //
+                ///////////////////////
+                
         if (newMessage == null) 
         {
             System.out.println(currentHop.name + " received a REPLY");
@@ -198,11 +290,7 @@ public class NetworkSimulator {
 
         if (m instanceof ARP && m.operation == Operation.REQUEST) // If it's an ARP REQUEST
         {  
-            if (currentHop instanceof Node)
-                log.writeLog(currentHop.name + " box " + currentHop.name + " :  ARP - Who has " + m.data + "? Tell " + currentHop.IP + "\n");     
-            else if (currentHop instanceof Port)
-                log.writeLog(((Port) currentHop).owner.name + " box " + ((Port) currentHop).owner.name + " :  ARP - Who has " + m.data + "? Tell " + currentHop.IP + "\n");
-
+            
             ArrayList<Host> neighbors = subNetworks.get(currentHop.subNet);
 
             System.out.println("Current subNet : " + currentHop.subNet);
@@ -213,57 +301,25 @@ public class NetworkSimulator {
                     execute (h, newMessage.get(0), currentHop.IP, currentHop.MAC); // REPLY comes back from the cable
                 }
             }
-            
-            execute(currentHop, message, "", ""); // Reexecute, because now the HOST knows where to send the message
+
+            if (currentHop instanceof Node) 
+            {
+                message.operation = Operation.NEW;
+                execute(currentHop, message, "", ""); // Reexecute, because now the HOST knows where to send the message
+            }
+            else
+            {
+                execute(currentHop, message, currentHop.IP, currentHop.MAC);
+            }
+                
             
             return;
         }
         else if (m instanceof ARP && m.operation == Operation.REPLY) // If it's an ARP REPLY
         {   
-            if (currentHop instanceof Node)
-            {
-                if (getAway.get(m.recipient) instanceof Node) 
-                    log.writeLog(currentHop.name + " => "  + getAway.get(m.recipient).name +" :  ARP - " + m.data + " is at " + currentHop.IP + "\n");
-                else if (getAway.get(m.recipient) instanceof Port)
-                    log.writeLog(currentHop.name + " => "  + ((Port) getAway.get(m.recipient)).owner.name +" :  ARP - " + m.data + " is at " + currentHop.IP + "\n");
-            }
-            else if (getAway.get(m.recipient) instanceof Node)
-                log.writeLog(((Port) currentHop).owner.name + " => "  + getAway.get(m.recipient).name +" :  ARP - " + m.data + " is at " + currentHop.IP + "\n");
-            else if (getAway.get(m.recipient) instanceof Port)
-                log.writeLog(((Port) currentHop).owner.name + " => "  + ((Port) getAway.get(m.recipient)).owner.name +" :  ARP - " + m.data + " is at " + currentHop.IP + "\n");
-
-            
             currentHop.updateTable(lastHopIP,lastHopMAC); // Updtae ARP TABLE with the info from the lastHop, just in case it's necessary later
             nextHopIP = lastHopIP;
         }
-        
-        // LOGGIN STUFF BEGIN
-        if (m instanceof ICMP)
-        {
-            //log.writeLog(" \n I'm in " + m.toString() + " - " + m.operation + "\n");
-            if (getAway.get(currentHop.IP) instanceof Node)
-            {
-                if (getAway.get(nextHopIP) instanceof Node)
-                {
-                    log.writeLog(currentHop.name + " => "  + getAway.get(nextHopIP).name +" :  ICMP - Echo (ping) " + m.operation + " (src = " + m.sender + " , dst = " + m.recipient + ", ttl = " + m.ttl +  " , data = " + m.data + "\n");
-                }
-                else if (getAway.get(nextHopIP) instanceof Port)
-                {   
-                    log.writeLog(currentHop.name + " => "  + ((Port) getAway.get(nextHopIP)).owner.name +" :  ICMP - Echo (ping) " + m.operation + " (src = " + m.sender + " , dst = " + m.recipient + ", ttl = " + m.ttl + " , data = " + m.data + "\n");
-                }
-            }
-            else if (getAway.get(nextHopIP) instanceof Node)
-            {
-                //Log.getInstance().writeLog(" \n AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " + nextHopIP + "aaaa \n"); 
-                log.writeLog(((Port) currentHop).owner.name + " => "  + getAway.get(nextHopIP).name +" :  ICMP - Echo (ping) " + m.operation + " (src = " + m.sender + " , dst = " + m.recipient + ", ttl = " + m.ttl + " , data = " + m.data + "\n");
-            }
-            else if (getAway.get(nextHopIP) instanceof Port)
-            {
-                //Log.getInstance().writeLog(" \n AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " + nextHopIP + "aaaa \n");
-                log.writeLog(((Port) currentHop).owner.name + " => "  + ((Port) getAway.get(nextHopIP)).owner.name +" :  ICMP - Echo (ping) " + m.operation + " (src = " + m.sender + " , dst = " + m.recipient + ", ttl = " + m.ttl + " , data = " + m.data + "\n");
-            }
-        }
-        // LOGGIN STUFF END
         
         String nextHopMAC = currentHop.hasMACOf(nextHopIP); // Get MAC of the nextHop
         nextHop = MACcess.get(nextHopMAC);
