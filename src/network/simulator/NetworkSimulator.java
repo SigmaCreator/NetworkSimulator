@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -14,7 +13,7 @@ import java.util.HashMap;
 public class NetworkSimulator {
     
     ArrayList<Router> routers;
-    HashMap<String,Node> getAway; // IP , NODE
+    HashMap<String,Host> getAway; // IP , HOST
     HashMap<String,Host> MACcess; // MAC , HOST
     HashMap<String,ArrayList<Host>> subNetworks; // subNet ID , subNet HOSTS
     
@@ -24,7 +23,7 @@ public class NetworkSimulator {
         getAway = new HashMap<>();
         MACcess = new HashMap<>();
         subNetworks = new HashMap<>();
-                
+                        
         BufferedReader br = null;
         
         try 
@@ -33,8 +32,8 @@ public class NetworkSimulator {
             String line;
             String [] info;
             
-            String name, MAC, IP, gateway, subNet;
-            int MTU, numPorts;
+            String name, MAC, IP, gateway;
+            int MTU;
             
             int state = 0; // 1 - NODE , 2 - #ROUTER, 3 - #ROUTERTABLE
             
@@ -73,9 +72,7 @@ public class NetworkSimulator {
                         Router router = new Router(info[0], new ArrayList<>());
                         Port port = null;
                         int portCounter = 0;
-                        
-                        numPorts = Integer.parseInt(info[1]);
-                        
+                                                
                         for (int i = 2; i < info.length; i += 3)
                         {
                             name = router.name + "." + portCounter;
@@ -89,6 +86,7 @@ public class NetworkSimulator {
                             
                             router.addPort(port);
                             
+                            getAway.put(port.IP,port);
                             MACcess.put(port.MAC,port);
                             addToSubNetworks(port);
                             
@@ -128,8 +126,8 @@ public class NetworkSimulator {
         } 
         catch (IOException e) { e.printStackTrace(); } 
 
-        Node sender = getAway.get("210.0.1.1");
-        Node recipient = getAway.get("210.0.4.1");
+        Node sender = (Node) getAway.get("210.0.1.1");
+        Node recipient = (Node) getAway.get("210.0.4.1");
                 
         Message first = new ICMP(sender.IP, recipient.IP, Operation.NEW);
         
@@ -138,6 +136,10 @@ public class NetworkSimulator {
         first.moreFragments = false;
         
         execute(sender, first , "", "");
+        
+        System.out.println("==================");
+        
+        System.out.println(Log.getInstance().getLog());
     }
     
     public void execute (Host currentHop, Message message, String lastHopIP, String lastHopMAC)
@@ -159,8 +161,6 @@ public class NetworkSimulator {
             currentHop = nextGateway.port; // The PORT of exit is now the currentHop
             
             System.out.println("Router redirected to " + currentHop.name);
-            
-            //System.out.println(nextGateway.IP);
             
             if (nextGateway.IP.equals("0.0.0.0")) nextHopIP = message.recipient; // nextHop has direct connection to this port
             else nextHopIP = nextGateway.IP; // nextHopIP is where the GATEWAY leads to
@@ -194,6 +194,11 @@ public class NetworkSimulator {
 
         if (m instanceof ARP && m.operation == Operation.REQUEST) // If it's an ARP REQUEST
         {  
+            if (currentHop instanceof Node)
+                Log.getInstance().writeLog(currentHop.name + " box " + currentHop.name + " :  ARP - Who has " + m.data + "? Tell " + currentHop.IP + "\n");     
+            else if (currentHop instanceof Port)
+                Log.getInstance().writeLog(((Port) currentHop).owner.name + " box " + ((Port) currentHop).owner.name + " :  ARP - Who has " + m.data + "? Tell " + currentHop.IP + "\n");
+
             ArrayList<Host> neighbors = subNetworks.get(currentHop.subNet);
 
             System.out.println("Current subNet : " + currentHop.subNet);
@@ -211,8 +216,39 @@ public class NetworkSimulator {
         }
         else if (m instanceof ARP && m.operation == Operation.REPLY) // If it's an ARP REPLY
         {   
+            if (currentHop instanceof Node)
+            {
+                if (getAway.get(m.recipient) instanceof Node) 
+                    Log.getInstance().writeLog(currentHop.name + " => "  + getAway.get(m.recipient).name +" :  ARP - " + m.data + " is at " + currentHop.IP + "\n");
+                else if (getAway.get(m.recipient) instanceof Port)
+                    Log.getInstance().writeLog(currentHop.name + " => "  + ((Port) getAway.get(m.recipient)).owner.name +" :  ARP - " + m.data + " is at " + currentHop.IP + "\n");
+            }
+            else if (getAway.get(m.recipient) instanceof Node)
+                Log.getInstance().writeLog(((Port) currentHop).owner.name + " => "  + getAway.get(m.recipient).name +" :  ARP - " + m.data + " is at " + currentHop.IP + "\n");
+            else if (getAway.get(m.recipient) instanceof Port)
+                Log.getInstance().writeLog(((Port) currentHop).owner.name + " => "  + ((Port) getAway.get(m.recipient)).owner.name +" :  ARP - " + m.data + " is at " + currentHop.IP + "\n");
+
+            
             currentHop.updateTable(lastHopIP,lastHopMAC); // Updtae ARP TABLE with the info from the lastHop, just in case it's necessary later
             nextHopIP = lastHopIP;
+        }
+        
+        if (m instanceof ICMP)
+        {
+            if (currentHop instanceof Node)
+            {
+                if (getAway.get(nextHopIP) instanceof Node)                
+                    Log.getInstance().writeLog(currentHop.name + " => "  + getAway.get(nextHopIP).name +" :  ICMP - Echo (ping) " + m.operation + " (src = " + m.sender + " , dst = " + m.recipient + ", ttl = " + " , data = " + m.data + "\n");
+                else if (getAway.get(m.recipient) instanceof Port)
+                {   
+                    Log.getInstance().writeLog(" \n AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " + nextHopIP + "aaaa \n");
+                    Log.getInstance().writeLog(currentHop.name + " => "  + ((Port) currentHop).owner.name +" :  ICMP - Echo (ping) " + m.operation + " (src = " + m.sender + " , dst = " + m.recipient + ", ttl = " + " , data = " + m.data + "\n");
+                }
+            }
+            else if (getAway.get(nextHopIP) instanceof Node)
+                Log.getInstance().writeLog(((Port) currentHop).owner.name + " => "  + getAway.get(nextHopIP).name +" :  ICMP - Echo (ping) " + m.operation + " (src = " + m.sender + " , dst = " + m.recipient + ", ttl = " + " , data = " + m.data + "\n");
+            else if (getAway.get(nextHopIP) instanceof Port)
+                Log.getInstance().writeLog(((Port) currentHop).owner.name + " => "  + ((Port) getAway.get(nextHopIP)).owner.name +" :  ICMP - Echo (ping) " + m.operation + " (src = " + m.sender + " , dst = " + m.recipient + ", ttl = " + " , data = " + m.data + "\n");
         }
         
         String nextHopMAC = currentHop.hasMACOf(nextHopIP); // Get MAC of the nextHop

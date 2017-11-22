@@ -33,7 +33,9 @@ public class Node extends Host {
             else // There are no more fragments on the way
             {
                 buffer.append(message.data); // Get data from the message
-                    
+                
+                Log.getInstance().writeLog(name + " rbox " + name + " : Received " + buffer.toString() + "\n");
+                
                 if (message.operation == Operation.REQUEST) // If it was an ICMP REQUEST, then I should REPLY
                 {
                     return shatter(IP, message.sender, buffer.toString(), Operation.REPLY, message.moreFragments);
@@ -46,6 +48,7 @@ public class Node extends Host {
         }
         else if (message instanceof ARP && message.operation == Operation.REQUEST && message.data.equals(IP)) // If it's an ARP REQUEST for me
         {
+            
             Message reply = new ARP (IP, message.sender, Operation.REPLY);
             reply.data = MAC;
             
