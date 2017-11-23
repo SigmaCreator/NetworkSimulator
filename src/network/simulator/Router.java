@@ -26,8 +26,6 @@ public class Router {
         String subNet;
         int range = 0;
         
-        System.out.println("Verifying: " + IP);
-        
         for (int i = 0; i < IP.length(); i++)
         {
             if (IP.charAt(i) == '.')

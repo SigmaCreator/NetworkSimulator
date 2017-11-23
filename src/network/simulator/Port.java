@@ -13,10 +13,8 @@ public class Port extends Host
         this.IP = IP;
         this.MTU = MTU;
         this.arpTable = new HashMap<>();
-        buffer = new StringBuffer();
         
         setSubNet();
-        System.out.println(subNet);
     } 
     
     public void setRouter (Router owner) { this.owner = owner;}
@@ -43,9 +41,11 @@ public class Port extends Host
         
             if (gateway.equals("0.0.0.0")) gateway = nextHopIP;
         
-            System.out.println("Next gateway : " + gateway);
-        
-            if (hasMACOf(gateway) != null) return shatter(message.sender, message.recipient, message.data, message.operation, message.moreFragments, message.ttl - 1);
+            if (hasMACOf(gateway) != null)
+            {
+                if (message.ttl - 1 == 0) return null;
+                return shatter(message.sender, message.recipient, message.data, message.operation, message.moreFragments, message.ttl - 1);
+            }
             else
             {
                 Message request = new ARP (IP, broadcast, Operation.REQUEST);
@@ -68,7 +68,6 @@ public class Port extends Host
             for (int i = 0; i < content.length(); i += MTU) 
             {
                 piece = content.substring(i, Math.min(i + MTU, content.length()));
-                    System.out.println("Offset " + i + " : " + piece);
                 pieces.add(piece);
             }
             
@@ -81,7 +80,6 @@ public class Port extends Host
                 frag.data = p;
                 frag.moreFragments = true;
                 frag.ttl = ttl;
-                    System.out.println("New ICMP fragment - Sender : " + frag.sender + " | Recipient : " + frag.recipient + " | Data : " + frag.data);
                 fragments.add(frag);
             }
             

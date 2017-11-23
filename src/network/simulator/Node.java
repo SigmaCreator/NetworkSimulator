@@ -6,6 +6,7 @@ import java.util.HashMap;
 public class Node extends Host {
     
     String gateway;
+    StringBuffer buffer;
     
     public Node (String name, String MAC, String IP, int MTU, String gateway)
     {
@@ -18,7 +19,6 @@ public class Node extends Host {
         buffer = new StringBuffer();
         
         setSubNet();
-        System.out.println(subNet);
     }
     
     public ArrayList<Message> writeMessage (Message message) {
@@ -82,7 +82,6 @@ public class Node extends Host {
             for (int i = 0; i < content.length(); i += MTU) 
             {
                 piece = content.substring(i, Math.min(i + MTU, content.length()));
-                    System.out.println("Offset " + i + " : " + piece);
                 pieces.add(piece);
             }
             
@@ -95,7 +94,6 @@ public class Node extends Host {
                 frag.data = p;
                 frag.moreFragments = true;
                 frag.ttl = ttl;
-                    System.out.println("New ICMP fragment - Sender : " + frag.sender + " | Recipient : " + frag.recipient + " | Data : " + frag.data);
                 fragments.add(frag);
             }
             

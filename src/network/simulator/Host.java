@@ -8,7 +8,6 @@ public class Host {
     String IP;
     int MTU;
     HashMap<String,String> arpTable;
-    StringBuffer buffer;
     String subNet;
     String broadcast;
     

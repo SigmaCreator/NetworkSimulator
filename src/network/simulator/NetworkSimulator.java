@@ -45,7 +45,6 @@ public class NetworkSimulator {
             
             while ((line = br.readLine()) != null) 
             {
-                System.out.println(line);
                         
 		if (line.equals("#NODE")) { state = 1; continue; }
                 if (line.equals("#ROUTER")) { state = 2; continue; }
@@ -123,8 +122,6 @@ public class NetworkSimulator {
                                 currentPort = p;
                         }
                         
-                        System.out.println(currentRouter.name + "\n" + currentPort + " - " + info[3]);
-                        
                         g = new Gateway(info[2],currentPort);
                         currentRouter.addTableEntry(info[1], g);
                      
@@ -177,12 +174,9 @@ public class NetworkSimulator {
     
     public void execute (Host currentHop, Message message, String lastHopIP, String lastHopMAC)
     {
-        System.out.println("==================");
         Host nextHop;
         ArrayList<Message> newMessage;
         String nextHopIP = "";
-        
-        System.out.println("Message arrived at " + currentHop.name + " - " + currentHop.IP);
         
         if (currentHop instanceof Port) // If it's a PORT
         {
@@ -193,12 +187,8 @@ public class NetworkSimulator {
 
             currentHop = nextGateway.port; // The PORT of exit is now the currentHop
             
-            System.out.println("Router redirected to " + currentHop.name);
-            
             if (nextGateway.IP.equals("0.0.0.0")) nextHopIP = message.recipient; // nextHop has direct connection to this port
             else nextHopIP = nextGateway.IP; // nextHopIP is where the GATEWAY leads to
-            
-            System.out.println("Next hop is " + nextHopIP);
                         
             newMessage = ((Port) currentHop).writeMessage(message, nextHopIP); // PORT writes the message
             
@@ -206,7 +196,7 @@ public class NetworkSimulator {
         else
         {
             nextHopIP = ((Node) currentHop).gateway;
-            System.out.println("Next hop is " + nextHopIP);
+
             newMessage = ((Node) currentHop).writeMessage(message); // HOST writes the message
         }
         
@@ -264,7 +254,7 @@ public class NetworkSimulator {
                 
                 if (((ICMP) message).moreFragments == false && currentHop instanceof Node)
                 {
-                    log.writeLog(currentHop.name + " rbox " + currentHop.name + " : Received " + currentHop.buffer.toString() + "\n");
+                    log.writeLog(currentHop.name + " rbox " + currentHop.name + " : Received " + ((Node) currentHop).buffer.toString() + "\n");
                 }
             }
         }
@@ -273,27 +263,14 @@ public class NetworkSimulator {
                 // LOGGING STUFF END //
                 ///////////////////////
                 
-        if (newMessage == null) 
-        {
-            System.out.println(currentHop.name + " received a REPLY");
-            return;
-        }
+        if (newMessage == null) return; // There was no need to REPLY or whatever
         
-        if (newMessage.get(0) instanceof ARP)
-            System.out.println(currentHop.name + " wrote an ARP " + newMessage.get(0).operation);
-        else
-            System.out.println(currentHop.name + " wrote an ICMP " + newMessage.get(0).operation);
-        
-        System.out.println("Sender: " + newMessage.get(0).sender + " | Recipient: " + newMessage.get(0).recipient + " | Data: " + newMessage.get(0).data);
-
         Message m = newMessage.get(0); // Get a fragment to check protocol
 
         if (m instanceof ARP && m.operation == Operation.REQUEST) // If it's an ARP REQUEST
         {  
             
             ArrayList<Host> neighbors = subNetworks.get(currentHop.subNet);
-
-            System.out.println("Current subNet : " + currentHop.subNet);
             
             for (Host h : neighbors)
             {
