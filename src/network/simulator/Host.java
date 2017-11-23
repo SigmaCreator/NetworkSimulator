@@ -38,7 +38,7 @@ public class Host {
         int size = 0;
         
         if ( range < 128 ) limit = 1;
-        else if ( 128 < range && range < 192) limit = 2;
+        else if ( 128 <= range && range < 192) limit = 2;
         else limit = 3;
         
         for (int i = 0; i < IP.length(); i++)

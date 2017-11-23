@@ -211,9 +211,9 @@ public class NetworkSimulator {
             if (message instanceof ARP && message.operation == Operation.REQUEST) // OK
             {
                 if (lastIntermediateHop instanceof Node)
-                    log.writeLog(lastIntermediateHop.name + " box " + lastIntermediateHop.name + " :  ARP - Who has " + message.data + "? Tell " + lastHopIP + "\n");     
+                    log.writeLog(lastIntermediateHop.name + " box " + lastIntermediateHop.name + " :  ARP - Who has " + message.data + "? Tell " + lastHopIP + ";\n");     
                 else if (lastIntermediateHop instanceof Port)
-                    log.writeLog(((Port) lastIntermediateHop).owner.name + " box " + ((Port) lastIntermediateHop).owner.name + " :  ARP - Who has " + message.data + "? Tell " + lastHopIP + "\n");
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " box " + ((Port) lastIntermediateHop).owner.name + " :  ARP - Who has " + message.data + "? Tell " + lastHopIP + ";\n");
             }
             else if (message instanceof ARP && message.operation == Operation.REPLY)
             {
@@ -221,14 +221,14 @@ public class NetworkSimulator {
                 if (lastIntermediateHop instanceof Node)
                 {
                     if (getAway.get(message.recipient) instanceof Node) 
-                        log.writeLog(lastIntermediateHop.name + " => "  + getAway.get(message.recipient).name + " :  ARP - " + lastHopIP + " is at " +  message.data + "\n");
+                        log.writeLog(lastIntermediateHop.name + " => "  + getAway.get(message.recipient).name + " :  ARP - " + lastHopIP + " is at " +  message.data + ";\n");
                     else if (getAway.get(message.recipient) instanceof Port)
-                        log.writeLog(lastIntermediateHop.name + " => "  + ((Port) getAway.get(message.recipient)).owner.name + " :  ARP - " + lastHopIP + " is at " +  message.data + "\n");
+                        log.writeLog(lastIntermediateHop.name + " => "  + ((Port) getAway.get(message.recipient)).owner.name + " :  ARP - " + lastHopIP + " is at " +  message.data + ";\n");
                 }
                 else if (getAway.get(message.recipient) instanceof Node)
-                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + getAway.get(message.recipient).name + " :  ARP - " + lastHopIP + " is at " +  message.data + "\n");
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + getAway.get(message.recipient).name + " :  ARP - " + lastHopIP + " is at " +  message.data + ";\n");
                 else if (getAway.get(message.recipient) instanceof Port)
-                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + ((Port) getAway.get(message.recipient)).owner.name + " :  ARP - " + lastHopIP + " is at " +  message.data + "\n");
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + ((Port) getAway.get(message.recipient)).owner.name + " :  ARP - " + lastHopIP + " is at " +  message.data + ";\n");
             }
             else if (message instanceof ICMP)
             {             
@@ -236,25 +236,25 @@ public class NetworkSimulator {
                 {
                     if (currentHop instanceof Node)
                     {
-                        log.writeLog(lastIntermediateHop.name + " => "  + currentHop.name + " :  ICMP - Echo (ping) " + message.operation + " (src = " + message.sender + " , dst = " + message.recipient + " , ttl = " + message.ttl +  " , data = " + message.data + ")\n");
+                        log.writeLog(lastIntermediateHop.name + " => "  + currentHop.name + " :  ICMP - Echo (ping) " + message.operation + " (src=" + message.sender + " dst=" + message.recipient + " ttl=" + message.ttl +  " data=" + message.data + ");\n");
                     }
                     else if (currentHop instanceof Port)
                     {   
-                        log.writeLog(lastIntermediateHop.name + " => "  + ((Port) currentHop).owner.name + " :  ICMP - Echo (ping) " + message.operation + " (src = " + message.sender + " , dst = " + message.recipient + " , ttl = " + message.ttl + " , data = " + message.data + ")\n");
+                        log.writeLog(lastIntermediateHop.name + " => "  + ((Port) currentHop).owner.name + " :  ICMP - Echo (ping) " + message.operation + " (src=" + message.sender + " dst=" + message.recipient + " ttl=" + message.ttl + " data=" + message.data + ");\n");
                     }
                 }
                 else if (currentHop instanceof Node)
                 {
-                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + currentHop.name +" :  ICMP - Echo (ping) " + message.operation + " (src = " + message.sender + " , dst = " + message.recipient + " , ttl = " + message.ttl + " , data = " + message.data + ")\n");
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + currentHop.name +" :  ICMP - Echo (ping) " + message.operation + " (src=" + message.sender + " dst=" + message.recipient + " ttl=" + message.ttl + " data=" + message.data + ");\n");
                 }
                 else if (currentHop instanceof Port && !currentHop.IP.equals(lastHopIP))
                 {
-                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + ((Port) currentHop).owner.name + " :  ICMP - Echo (ping) " + message.operation + " (src = " + message.sender + " , dst = " + message.recipient + " , ttl = " + message.ttl + " , data = " + message.data + ")\n");
+                    log.writeLog(((Port) lastIntermediateHop).owner.name + " => "  + ((Port) currentHop).owner.name + " :  ICMP - Echo (ping) " + message.operation + " (src=" + message.sender + " dst=" + message.recipient + " ttl=" + message.ttl + " data=" + message.data + ");\n");
                 }
                 
                 if (((ICMP) message).moreFragments == false && currentHop instanceof Node)
                 {
-                    log.writeLog(currentHop.name + " rbox " + currentHop.name + " : Received " + ((Node) currentHop).buffer.toString() + "\n");
+                    log.writeLog(currentHop.name + " rbox " + currentHop.name + " : Received " + ((Node) currentHop).buffer.toString() + ";\n");
                 }
             }
         }

@@ -5,9 +5,11 @@
         <group>
             <file>file:/C:/Users/user/Documents/NetBeansProjects/Network%20Simulator/src/network/simulator/NetworkSimulator.java</file>
             <file>file:/C:/Users/user/Documents/NetBeansProjects/Network%20Simulator/src/network/simulator/Host.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/Network%20Simulator/src/network/simulator/Node.java</file>
             <file>file:/C:/Users/user/Documents/NetBeansProjects/Network%20Simulator/src/network/simulator/Router.java</file>
             <file>file:/C:/Users/user/Documents/NetBeansProjects/Network%20Simulator/src/network/simulator/Log.java</file>
             <file>file:/C:/Users/user/Documents/NetBeansProjects/Network%20Simulator/src/network/simulator/Runner.java</file>
+            <file>file:/C:/Users/user/Documents/NetBeansProjects/Network%20Simulator/src/network/simulator/Port.java</file>
         </group>
     </open-files>
 </project-private>
